@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter import font as tkfont
 
 LOG_DIRECTORY = Path("logs")
 LOG_DIRECTORY.mkdir(exist_ok=True)
@@ -56,11 +57,17 @@ class LogStorage:
 class AvionicsCanvas(ttk.Frame):
     """Animated avionics-style canvas with radar sweep and widgets."""
 
-    def __init__(self, master: tk.Widget, *args, **kwargs):
+    def __init__(self, master: tk.Widget, font_family: str, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.canvas = tk.Canvas(self, width=320, height=320, bg="#0B172A", highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
         self._radar_angle = 0
+        self._font_family = font_family
+        self._fonts = {
+            "title": tkfont.Font(family=font_family, size=12, weight="bold"),
+            "subtitle": tkfont.Font(family=font_family, size=10),
+            "label": tkfont.Font(family=font_family, size=10),
+        }
         self._draw_static_elements()
         self._animate()
 
@@ -69,13 +76,13 @@ class AvionicsCanvas(ttk.Frame):
         c.create_oval(40, 40, 280, 280, outline="#19D3FF", width=3)
         for r in range(60, 140, 20):
             c.create_oval(160 - r, 160 - r, 160 + r, 160 + r, outline="#12304D", dash=(2, 4))
-        c.create_text(160, 24, text="AVİYONİK GÖSTERGE", fill="#FFFFFF", font=("Segoe UI", 12, "bold"))
-        c.create_text(160, 296, text="Radyo Navigasyon", fill="#19D3FF", font=("Segoe UI", 10))
+        c.create_text(160, 24, text="AVİYONİK GÖSTERGE", fill="#FFFFFF", font=self._fonts["title"])
+        c.create_text(160, 296, text="Radyo Navigasyon", fill="#19D3FF", font=self._fonts["subtitle"])
         # HUD horizon
         c.create_rectangle(60, 150, 260, 170, outline="", fill="#1F2A44")
         c.create_line(60, 160, 260, 160, fill="#19D3FF", width=2)
-        c.create_text(70, 140, text="IAS", fill="#98FAEC", anchor="w", font=("Consolas", 10))
-        c.create_text(250, 140, text="ALT", fill="#FFC857", anchor="e", font=("Consolas", 10))
+        c.create_text(70, 140, text="IAS", fill="#98FAEC", anchor="w", font=self._fonts["label"])
+        c.create_text(250, 140, text="ALT", fill="#FFC857", anchor="e", font=self._fonts["label"])
 
     def _animate(self) -> None:
         c = self.canvas
@@ -96,25 +103,48 @@ class LogApp(ttk.Frame):
         self.storage = storage
         self.pack(fill="both", expand=True)
         self._selected_date = tk.StringVar(value=datetime.now().strftime("%Y-%m-%d"))
+        self._font_family = self._resolve_font_family()
         self._setup_style()
         self._build_layout()
         self._populate_dates()
         self._load_selected_date()
         self._update_clock()
 
+    def _resolve_font_family(self) -> str:
+        preferred = "Segoe UI"
+        available = {name.lower(): name for name in tkfont.families(self.master)}
+        if preferred.lower() in available:
+            return available[preferred.lower()]
+        default_font = tkfont.nametofont("TkDefaultFont")
+        fallback_family = default_font.cget("family")
+        if fallback_family:
+            return fallback_family
+        if available:
+            return next(iter(available.values()))
+        return "TkDefaultFont"
+
     def _setup_style(self) -> None:
         style = ttk.Style()
         style.theme_use("clam")
         base_bg = "#081426"
         accent = "#19D3FF"
+        base_font = tkfont.nametofont("TkDefaultFont")
+        base_font.configure(family=self._font_family, size=10)
+        self.fonts = {
+            "base": base_font,
+            "header": tkfont.Font(family=self._font_family, size=18, weight="bold"),
+            "subheader": tkfont.Font(family=self._font_family, size=11),
+            "button": tkfont.Font(family=self._font_family, size=10, weight="bold"),
+            "tree_heading": tkfont.Font(family=self._font_family, size=10, weight="bold"),
+        }
         style.configure("TFrame", background=base_bg)
-        style.configure("TLabel", background=base_bg, foreground="#E1ECF7", font=("Segoe UI", 10))
-        style.configure("Header.TLabel", font=("Segoe UI", 18, "bold"), foreground=accent)
-        style.configure("SubHeader.TLabel", font=("Segoe UI", 11))
-        style.configure("Accent.TButton", background=accent, foreground="#081426", font=("Segoe UI", 10, "bold"))
+        style.configure("TLabel", background=base_bg, foreground="#E1ECF7", font=self.fonts["base"])
+        style.configure("Header.TLabel", font=self.fonts["header"], foreground=accent)
+        style.configure("SubHeader.TLabel", font=self.fonts["subheader"])
+        style.configure("Accent.TButton", background=accent, foreground="#081426", font=self.fonts["button"])
         style.map("Accent.TButton", background=[("active", "#42E6FF")])
         style.configure("Treeview", background="#0F1F38", fieldbackground="#0F1F38", foreground="#E8F1FF", rowheight=28)
-        style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"), foreground=accent)
+        style.configure("Treeview.Heading", font=self.fonts["tree_heading"], foreground=accent)
         style.map("Treeview", background=[("selected", "#1F3B64")])
 
     def _build_layout(self) -> None:
@@ -181,7 +211,7 @@ class LogApp(ttk.Frame):
 
         ttk.Label(form_frame, text="Log Açıklaması").grid(row=4, column=0, sticky="w")
         self.message_text = tk.Text(form_frame, height=6, wrap="word", background="#0F1F38", foreground="#E1ECF7",
-                                    insertbackground="#E1ECF7", relief="flat", font=("Segoe UI", 10))
+                                    insertbackground="#E1ECF7", relief="flat", font=self.fonts["base"])
         self.message_text.grid(row=5, column=0, sticky="nsew", pady=(0, 12))
 
         form_frame.columnconfigure(0, weight=1)
@@ -194,7 +224,7 @@ class LogApp(ttk.Frame):
         avionics_frame = ttk.Frame(parent)
         avionics_frame.grid(row=1, column=1, sticky="nsew")
         ttk.Label(avionics_frame, text="Aviyonik Durum Görselleştirmesi", style="SubHeader.TLabel").pack(anchor="w")
-        AvionicsCanvas(avionics_frame).pack(fill="both", expand=True, pady=(8, 0))
+        AvionicsCanvas(avionics_frame, self._font_family).pack(fill="both", expand=True, pady=(8, 0))
 
     def _populate_dates(self) -> None:
         dates = self.storage.available_dates()
@@ -256,7 +286,6 @@ def main() -> None:
     root.title("Aviyonik Günlük İzleme")
     root.geometry("1100x640")
     root.configure(bg="#081426")
-    root.option_add("*Font", "Segoe UI 10")
     storage = LogStorage(LOG_DIRECTORY)
     LogApp(root, storage)
     root.mainloop()
