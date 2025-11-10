@@ -1,12 +1,12 @@
-# Aviyonik Günlük İzleme Arayüzü
+# Jira Esintili Günlük İzleme Arayüzü
 
-Bu proje, günlük log kayıtlarının modern ve dinamik bir arayüzde tutulmasını ve canlı olarak izlenmesini sağlar. Aviyonik sistemlerden ilham alan radar görünümü ve tematik renkler ile girişler kolayca takip edilir. Kaydedilen tüm log girdileri tarih bazında `logs/` klasörü altında saklanır.
+Bu proje, günlük log kayıtlarının Atlassian Jira takvim görünümüne benzer modern bir arayüzde tutulmasını ve canlı olarak izlenmesini sağlar. Kart tabanlı zaman çizelgesi ve tablo bileşenleri ile kayıtlar kolayca takip edilir. Kaydedilen tüm log girdileri tarih bazında `logs/` klasörü altında saklanır.
 
 ## Özellikler
 
 - **Canlı günlük akışı:** Aynı gün için yapılan tüm girişler anında listeye eklenir.
-- **Renkli durum seviyeleri:** Normal, uyarı ve kritik kayıtlar farklı renklerde vurgulanır.
-- **Aviyonik görselleştirme:** Radar taraması ve HUD çizimleri içeren animasyonlu panel.
+- **Renkli durum seviyeleri:** Normal, uyarı ve kritik kayıtlar farklı Atlassian tonları ile vurgulanır.
+- **Zaman çizelgesi:** Haftalık plan görünümünü anımsatan çizelgede log kartları saat aralıklarına yerleşir.
 - **Geçmiş kayıtlar:** Tarih seçici üzerinden önceki günlerin log dosyalarını görüntüleme.
 - **Otomatik dosya kaydı:** Her gün için ayrı `YYYY-MM-DD.jsonl` dosyaları oluşturulur.
 
